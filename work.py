@@ -1,9 +1,12 @@
+import pyodbc
+
+
 class User:
     def __init__(self):
         self.login = ""
         self.password = ""
         self.email = ""
-        self.role = 0;
+        self.role = 0
 
     def log_in(self):
         print("Введите логин")
@@ -113,8 +116,12 @@ class Document:
         self.document_type = document_type
 
 
-user1 = User()
-user1.log_in()
-print(user1.login)
-print(user1.password)
-print(user1.email)
+conn = pyodbc.connect(driver='{SQL Server Native Client 11.0}',
+                      server='DESKTOP-UP524EV', database='EmploymentCenter',
+                      trusted_connection='yes', autocommit=True)
+
+cursor = conn.cursor()
+cursor.execute('SELECT * FROM Role')
+
+for row in cursor:
+    print(row)
