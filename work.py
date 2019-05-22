@@ -3,6 +3,7 @@ import pyodbc
 
 class User:
     def __init__(self):
+        self.id = 0
         self.login = ""
         self.password = ""
         self.email = ""
@@ -17,6 +18,12 @@ class User:
         self.email = input()
         print("Выберите роль")
         self.role = int(input())
+        cursor.execute("""INSERT INTO Users (login, password, email, roleId) 
+                          VALUES (?, ?, ?, ?)""", (self.login, self.password, self.email, self.role))
+        conn.commit()
+        res = cursor.execute('SELECT id FROM Users WHERE login =? AND password =?', (self.login, self.password))
+        result = res.fetchone()
+        self.id = result[0]
         if self.role == 1:
             print("Введите Фамилию")
             last_name = input()
@@ -24,11 +31,24 @@ class User:
             name = input()
             print("Введите Отчество")
             middle_name = input()
-            print("Введите Дату рождения в формате MM/DD/YY")
+            print("Введите Дату рождения в формате YYYY-MM-DD")
             date_of_birthday = input()
             print("Введите телефон")
             telephone = input()
+            print("Введите название университета")
+            university_name = input()
+            print("Введите специальность")
+            specialty = input()
+            print("Введите год начала обучения в формате YYYY")
+            start_year = input()
+            print("Введите год окончания обучения в формате YYYY")
+            end_year = input()
             unemployed = Unemployed(last_name, name, middle_name, date_of_birthday, telephone)
+            cursor.execute("""INSERT INTO Unemployed 
+                              (userId, lastName, name, middleName, dateOfBirthday, telephone, universityName, specialty, startYear, endYear) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                              (self.id, last_name, name, middle_name, date_of_birthday, telephone, university_name, specialty, start_year, end_year))
+            conn.commit
         elif self.role == 2:
             print("Введите Наименование компании")
             name = input()
@@ -36,10 +56,35 @@ class User:
             about_company = input()
             print("Введите телефон")
             telephone = input()
-            hirer = Hirer(name, about_company, )
+            hirer = Hirer(name, about_company, telephone)
+            cursor.execute("""INSERT INTO Hirer 
+                              (userId, companyName, aboutCompany, telephone) 
+                              VALUES (?, ?, ?, ?)""",
+                              (self.id, name, about_company, telephone))
+            conn.commit
+        cursor.close()
 
-    def log_up(self, login, password):
-        pass
+    #вход
+    def log_up(self):
+        while True:
+            print("Введите логин")
+            login = input()
+            print("Введите пароль")
+            password = input()
+
+            res = cursor.execute('SELECT * FROM Users WHERE login =? AND password =?', (login, password))
+            result = res.fetchone()
+            if result:
+                self.id = result[0]
+                self.login = result[1]
+                self.password = result[2]
+                self.email = result[3]
+                self.role = result[4]
+                cursor.close()
+                break
+            else:
+                print("Такого пользователя не существует. Введите корректные данные.")
+
 
     def exit(self):
         pass
@@ -52,7 +97,6 @@ class Unemployed:
         self.middle_name = middle_name
         self.date_of_birthday = date_of_birthday
         self.telephone = telephone
-
 
     def create_resume(self):
         print("Введите уровень вашего образования")
@@ -69,8 +113,8 @@ class Unemployed:
         work_schedule = input()
         print("Напишите о себе")
         about_self = input()
-        resume = Document(type_education, city, position, experience, knowledge_of_english, work_schedule, about_self, 1)
-
+        resume = Document(type_education, city, position, experience, knowledge_of_english, work_schedule, about_self,
+                          1)
 
     def update_resume(self):
         pass
@@ -97,15 +141,16 @@ class Hirer:
         work_schedule = input()
         print("Напишите дополнительно о вакансии")
         about_self = input()
-        resume = Document(type_education, city, position, experience, knowledge_of_english, work_schedule, about_self, 2)
-
+        resume = Document(type_education, city, position, experience, knowledge_of_english, work_schedule, about_self,
+                          2)
 
     def update_vacancy(self):
         pass
 
 
 class Document:
-    def __init__(self, type_education, city, position, experience, knowledge_of_english, work_schedule, about_self, document_type):
+    def __init__(self, type_education, city, position, experience, knowledge_of_english, work_schedule, about_self,
+                 document_type):
         self.type_education = type_education
         self.city = city
         self.position = position
@@ -116,12 +161,29 @@ class Document:
         self.document_type = document_type
 
 
-conn = pyodbc.connect(driver='{SQL Server Native Client 11.0}',
-                      server='DESKTOP-UP524EV', database='EmploymentCenter',
-                      trusted_connection='yes', autocommit=True)
+# cursor.execute('SELECT * FROM Role')
+#
+# for row in cursor:
+#     print(row)
 
-cursor = conn.cursor()
-cursor.execute('SELECT * FROM Role')
+# cursor.execute("INSERT INTO Users (login, password, email, roleId) VALUES ('kAverina', 'ksusha', 'averina@gmail.com', 3)")
 
-for row in cursor:
-    print(row)
+
+if __name__ == '__main__':
+    user = User()
+    conn = pyodbc.connect(driver='{SQL Server}',
+                          server='DESKTOP-UP524EV', database='EmploymentCenter',
+                          trusted_connection='yes', autocommit=True)
+
+    cursor = conn.cursor()
+
+    print("Если вы зарегестрированы, то введите 1, чтобы войти.")
+    print("Если вы не зарегестрированы, то введите 2, чтобы войти.")
+    choice = int(input())
+    if choice == 1:
+        user.log_up()
+    elif choice == 2:
+        user.log_in()
+    print(user.login)
+    print(user.password)
+    print(user.role)
