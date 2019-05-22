@@ -8,6 +8,8 @@ class User:
         self.password = ""
         self.email = ""
         self.role = 0
+        #self.unemployed = Unemployed()
+        #self.hirer = Hirer()
 
     def log_in(self):
         print("Введите логин")
@@ -43,7 +45,7 @@ class User:
             start_year = input()
             print("Введите год окончания обучения в формате YYYY")
             end_year = input()
-            unemployed = Unemployed(last_name, name, middle_name, date_of_birthday, telephone)
+            self.unemployed = Unemployed(last_name, name, middle_name, date_of_birthday, telephone)
             cursor.execute("""INSERT INTO Unemployed 
                               (userId, lastName, name, middleName, dateOfBirthday, telephone, universityName, specialty, startYear, endYear) 
                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -56,7 +58,7 @@ class User:
             about_company = input()
             print("Введите телефон")
             telephone = input()
-            hirer = Hirer(name, about_company, telephone)
+            self.hirer = Hirer(name, about_company, telephone)
             cursor.execute("""INSERT INTO Hirer 
                               (userId, companyName, aboutCompany, telephone) 
                               VALUES (?, ?, ?, ?)""",
@@ -80,6 +82,22 @@ class User:
                 self.password = result[2]
                 self.email = result[3]
                 self.role = result[4]
+                if self.role == 1:
+                    res = cursor.execute('SELECT * FROM Unemployed WHERE userId =?', self.id)
+                    result = res.fetchone()
+                    last_name = result[2]
+                    name = result[3]
+                    middle_name = result[4]
+                    date_of_birthday = result[5]
+                    telephone = result[6]
+                    self.unemployed = Unemployed(last_name, name, middle_name, date_of_birthday, telephone)
+                else:
+                    res = cursor.execute('SELECT * FROM Hirer WHERE userId =?', self.id)
+                    result = res.fetchone()
+                    name = result[2]
+                    about_company = result[3]
+                    telephone = result[4]
+                    self.hirer = Hirer(name, about_company, telephone)
                 cursor.close()
                 break
             else:
@@ -91,6 +109,13 @@ class User:
 
 
 class Unemployed:
+    # def __init__(self):
+    #     self.last_name = ""
+    #     self.name = ""
+    #     self.middle_name = ""
+    #     self.date_of_birthday = ""
+    #     self.telephone = ""
+
     def __init__(self, last_name, name, middle_name, date_of_birthday, telephone):
         self.last_name = last_name
         self.name = name
@@ -121,6 +146,12 @@ class Unemployed:
 
 
 class Hirer:
+    # def __init__(self):
+    #     self.name = ""
+    #     self.about_company = ""
+    #     self.telephone = ""
+
+
     def __init__(self, name, about_company, telephone):
         self.name = name
         self.about_company = about_company
@@ -161,14 +192,6 @@ class Document:
         self.document_type = document_type
 
 
-# cursor.execute('SELECT * FROM Role')
-#
-# for row in cursor:
-#     print(row)
-
-# cursor.execute("INSERT INTO Users (login, password, email, roleId) VALUES ('kAverina', 'ksusha', 'averina@gmail.com', 3)")
-
-
 if __name__ == '__main__':
     user = User()
     conn = pyodbc.connect(driver='{SQL Server}',
@@ -184,6 +207,18 @@ if __name__ == '__main__':
         user.log_up()
     elif choice == 2:
         user.log_in()
-    print(user.login)
-    print(user.password)
-    print(user.role)
+    # print(user.login)
+    # print(user.password)
+    # print(user.role)
+    if user.role == 1:
+        employee = user.unemployed
+        print(employee.last_name)
+        print(employee.name)
+        print(employee.middle_name)
+        print(employee.date_of_birthday)
+        print(employee.telephone)
+    else:
+        hirer = user.hirer
+        print(hirer.name)
+        print(hirer.about_company)
+        print(hirer.telephone)
