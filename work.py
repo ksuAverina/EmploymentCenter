@@ -216,7 +216,6 @@ if __name__ == '__main__':
         print(employee.name)
         print(employee.middle_name)
         print(employee.date_of_birthday)
-        print(employee.telephone)
     else:
         hirer = user.hirer
         print(hirer.name)
