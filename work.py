@@ -146,6 +146,23 @@ class Unemployed:
         self.date_of_birthday = date_of_birthday
         self.telephone = telephone
 
+        res = cursor.execute("SELECT resumeId FROM Unemployed WHERE id = ?", self.id)
+        result = res.fetchone()
+        if not result[0] == "NULL":
+            doc = cursor.execute("""SELECT typeEducation, city, position, experience, knowledgeOfEnglish, workSchedule, aboutSelf
+                                FROM Document WHERE Document.id = ?""", result[0])
+            resum = doc.fetchone()
+            type_education = resum[0]
+            city = resum[1]
+            position = resum[2]
+            experience = resum[3]
+            knowledge_of_english = resum[4]
+            work_schedule = resum[5]
+            about_self = resum[6]
+            self.resume = Document(type_education, city, position, experience, knowledge_of_english, work_schedule, about_self, 1)
+
+
+
     def create_resume(self):
         print("Введите уровень вашего образования")
         type_education = int(input())
@@ -178,6 +195,25 @@ class Unemployed:
 
     def update_resume(self):
         pass
+
+    def see_job(self):
+        cursor.execute("""SELECT Hirer.companyName, Hirer.aboutCompany, Document.position, Hirer.telephone
+                     FROM Document INNER JOIN VacancyCompany ON Document.id = VacancyCompany.vacancyId 
+                     INNER JOIN Hirer ON VacancyCompany.hirerId = Hirer.id WHERE Document.typeDocument = 2 AND
+                     Document.typeEducation = ? AND Document.city = ? AND Document.position = ? AND 
+                     Document.experience = ? AND Document.knowledgeOfEnglish = ? AND Document.workSchedule = ?""",
+                     (self.resume.type_education, self.resume.city, self.resume.position, self.resume.experience,
+                      self.resume.knowledge_of_english, self.resume.work_schedule))
+
+        print("/--/--/--/" * 10)
+        print("/--/--/--/" * 10)
+        for row in cursor:
+            print("Наименование компании:  " + row[0])
+            print("О компании:  " + row[1])
+            print("Должность:  " + row[2])
+            print("Телефон:  " + row[3])
+            print("/--/--/--/" * 10)
+            print("/--/--/--/" * 10)
 
 
 class Hirer:
@@ -267,7 +303,8 @@ if __name__ == '__main__':
         print(employee.date_of_birthday)
         print(employee.telephone)
 
-        employee.create_resume()
+        #employee.create_resume()
+        employee.see_job()
     else:
         hirer = user.hirer
         print(hirer.name)
